@@ -16,7 +16,7 @@
   <% } %>
   <% if (!loggedIn) { %>
     <h3>You must log in to see this URL!</h3>
-  <% } else if (urls[shortURL]["userID"] !== userID) { %>
+  <% } else if (!urls[shortURL]) { %>
     <h3>This isnt your URL! Mayhaps you logged into the wrong account?</h3>
     <% } else { %>
     <div class="card text-center">
