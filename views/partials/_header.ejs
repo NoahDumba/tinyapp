@@ -22,8 +22,16 @@
             <button style="background-color: red; border-color: red; border-radius: 4px;" type="Submit"> Log out </button>
           </form>
         <% } else { %>
-          <a class="nav-item nav-link" href="/login">Login</a>
-          <a class="nav-item nav-link" href="/registration">Register</a>
+          <form class="form-inline" action="/login" method="POST">
+            <div class="form-group mb-2">
+              <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                  <a class="nav-item nav-link" href="/registration">Register</a>
+                  <a class="nav-item nav-link" href="/login">Login</a>
+                </div>
+              </div>
+            </div>
+          </form>
         <% } %>
   </nav>
 </header>

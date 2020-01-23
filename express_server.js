@@ -3,6 +3,9 @@ const cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
 
+app.set("view engine", "ejs");
+app.use(cookieParser());
+
 function generateRandomString() {
   const length = 6;
   return Math.round((Math.pow(36, length + 1) - Math.random() * Math.pow(36, length))).toString(36).slice(1);
@@ -15,25 +18,26 @@ function isRegistered(email) {
   return false;
 }
 
-app.set("view engine", "ejs");
-app.use(cookieParser());
+function isLoggedIn(idCookie) {
+  for (let element in users) {
+    if (users[element]['id'] === idCookie) {
+      return true; 
+    }
+  }
+  return false;
+}
 
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
     password: "purple-monkey-dinosaur"
-  },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
-    password: "dishwasher-funk"
   }
 }
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", shortURL: "b2xVn2", userID: "userRandomID"},
+  "9sm5xK": { longURL: "http://www.google.com", shortURL: "9sm5xK", userID: "userRandomID"}
 };
 
 const bodyParser = require("body-parser");
@@ -68,16 +72,22 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { userID: req.cookies["userID"], userDatabase: users };
+
+  if (isLoggedIn(req.cookies["userID"])) {
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { userDatabase: users, userID: req.cookies["userID"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  let templateVars = { userDatabase: users, userID: req.cookies["userID"], urls: urlDatabase, shortURL: urlDatabase[req.params.shortURL]["shortURL"], longURL: urlDatabase[req.params.shortURL]["longURL"] };
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL]["longURL"];
   res.redirect(longURL);
 });
 
@@ -101,18 +111,31 @@ app.post("/register", (req, res) => {
 }) 
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
+  if (isLoggedIn(req.cookies["userID"])) {
+    delete urlDatabase[req.params.shortURL];
+  } else {
+    res.send("Oi! That's not your URL to delete!")
+  }
   res.redirect("/urls/");
 }) 
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.newLongURL;
+  if (isLoggedIn(req.cookies["userID"])) {
+    urlDatabase[req.params.shortURL]["shortURL"] = req.body.newLongURL;
+  } else {
+    res.send("Oi! That's not your URL to edit!")
+  }
+  
   res.redirect("/urls/");
 });
 
 app.post("/urls", (req, res) => {
   let uniqueID = generateRandomString();
-  urlDatabase[uniqueID] = req.body['longURL'];
+  urlDatabase[uniqueID] = {
+    longURL: req.body.longURL,
+    shortURL: uniqueID,
+    userID: req.cookies["userID"]
+  };
   res.redirect("/urls/" + uniqueID);
 });
 
