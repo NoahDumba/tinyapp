@@ -18,7 +18,7 @@
         <% } %>
         <% if (loggedIn) { %>
           <span class="align-baseline pr-2"><%= userDatabase[userID]["email"] %></span>
-          <form method="POST" action="/logout">
+          <form method="POST" action="/logout?_method=DELETE">
             <button style="background-color: red; border-color: red; border-radius: 4px;" type="Submit"> Log out </button>
           </form>
         <% } else { %>

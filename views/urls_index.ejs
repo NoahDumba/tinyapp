@@ -40,7 +40,7 @@
               <td><form method="GET" action="/urls/<%= url%>">
                 <button style="color:blue; border: 2px solid blue; border-radius: 4px" type="Submit"> Edit </button>
               </form></td>
-              <td><form method="POST" action="/urls/<%= url%>/delete">
+              <td><form method="POST" action="/urls/<%= url%>?_method=DELETE">
                 <button style="color:red; border: 2px solid red; border-radius: 4px" type="Submit"> Delete </button>
               </form></td>
             </tr>

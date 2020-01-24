@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require('bcrypt');
 const { getUserByEmail } = require('./helpers');
 const cookieParser = require('cookie-session');
+const methodOverride = require('method-override');
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -10,6 +11,8 @@ app.use(cookieParser({
   name: 'userID',
   keys: ['a-very-super-secret-key-shhhh-dont-tell-anyone']
 }));
+// override with POST having ?_method=DELETE
+app.use(methodOverride('_method'));
 
 const generateRandomString = function() {
   const length = 6;
@@ -70,7 +73,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.get("/", (req, res) => {
-  if (!req.session["userID"]) {
+  if (!req.session["userID"] || !isLoggedIn(req.session["userID"])) {
     res.redirect('/login');
   } else {
     res.redirect('/urls');
@@ -92,7 +95,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/registration", (req, res) => {
-  if (req.session["userID"]) res.redirect("/urls");
+  if (req.session["userID"] && isLoggedIn(req.session["userID"])) res.redirect("/urls");
   else {
     let templateVars = { userID: req.session["userID"], userDatabase: users };
     res.render("register", templateVars);
@@ -100,7 +103,7 @@ app.get("/registration", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  if (req.session["userID"]) res.redirect("/urls");
+  if (isLoggedIn(req.session["userID"])) res.redirect("/urls");
   else {
     let templateVars = { userID: req.session["userID"], userDatabase: users };
     res.render("login", templateVars);
@@ -161,7 +164,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   if (isLoggedIn(req.session["userID"])) {
     delete urlDatabase[req.params.shortURL];
   } else {
@@ -170,7 +173,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls/");
 });
 
-app.post("/urls/:shortURL", (req, res) => {
+app.put("/urls/:shortURL", (req, res) => {
   if (isLoggedIn(req.session["userID"])) {
     urlDatabase[req.params.shortURL]["longURL"] = req.body.newLongURL;
   } else {
@@ -211,7 +214,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-app.post("/logout", (req, res) => {
+app.delete("/logout", (req, res) => {
   req.session = null;
   res.redirect("/urls");
 });
